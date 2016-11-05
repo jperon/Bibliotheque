@@ -1,3 +1,6 @@
+m/db.sqlite
+v/static/python/test.py
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
