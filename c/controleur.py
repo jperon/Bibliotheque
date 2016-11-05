@@ -38,13 +38,11 @@ def liste(**params):
         'editeurs': liste_editeurs,
         'ouvrages': liste_ouvrages,
     }[params['objet']]
-    if 'tri' in params:
-        return fnct(params['tri'])
-    else:
-        return fnct()
+    del params['objet']
+    return fnct(**params)
 
 
-def liste_auteurs(tri='nom'):
+def liste_auteurs(tri='nom', criteres=None):
     return(tuple(
         dict(
             id=auteur.id,
@@ -52,20 +50,20 @@ def liste_auteurs(tri='nom'):
             nom=auteur.nom,
             prenom=auteur.prenom,
             titre=auteur.titre
-        ) for auteur in db.liste_auteurs(tri)
+        ) for auteur in db.liste_auteurs(tri, criteres)
     ))
 
 
-def liste_editeurs(tri='nom'):
+def liste_editeurs(tri='nom', criteres=None):
     return(tuple(
         dict(
             id=editeur.id,
             nom=editeur.nom,
-        ) for editeur in db.liste_editeurs(tri)
+        ) for editeur in db.liste_editeurs(tri, criteres)
     ))
 
 
-def liste_ouvrages(tri='titre'):
+def liste_ouvrages(tri='titre', criteres=None):
     return(tuple(
         dict(
             id=ouvrage.id,
@@ -88,41 +86,8 @@ def liste_ouvrages(tri='titre'):
                 for auteur in ouvrage.auteurs
             ),
             exemplaires=ouvrage.exemplaires.count()
-        ) for ouvrage in db.liste_ouvrages(tri)
+        ) for ouvrage in db.liste_ouvrages(tri, criteres)
     ))
-
-
-def liste_ouvrages_old(tri='titre'):
-    return (
-        (
-            ('Titre', 'titre'),
-            ('Auteur', 'auteur'),
-            ('Éditeur', 'editeur'),
-            ('Autres auteurs', False),
-            ('Exemplaires', False)
-        ),
-        tuple((
-            (ouvrage.titre, 'ouvrage:{}'.format(ouvrage.id)),
-            ' '.join((
-                ouvrage.auteur.titre,
-                ouvrage.auteur.prenom,
-                ' '.join((
-                    ouvrage.auteur.particule, ouvrage.auteur.nom
-                )).replace("' ", "'"),
-            )),
-            ouvrage.editeur.nom,
-            ' ; '.join(
-                ' '.join((
-                    auteur.titre,
-                    auteur.prenom,
-                    auteur.particule,
-                    auteur.nom,
-                ))
-                for auteur in ouvrage.auteurs
-            ),
-            ouvrage.exemplaires.count()
-        ) for ouvrage in db.liste_ouvrages(tri))
-    )
 
 
 def ouvrage(id):

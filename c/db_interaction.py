@@ -51,9 +51,18 @@ def creer_volume(
     )
 
 
-def liste_auteurs(tri='nom'):
+def liste_auteurs(tri='nom', criteres=None):
+    if not criteres:
+        criteres = {'particule': '', 'nom': '', 'prenom': '', 'titre': ''}
     return(
-        db.Auteur.select().order_by({
+        db.Auteur.select()
+        .where(
+            (db.Auteur.particule ** '%{}%'.format(criteres['particule'])) &
+            (db.Auteur.nom ** '%{}%'.format(criteres['nom'])) &
+            (db.Auteur.prenom ** '%{}%'.format(criteres['prenom'])) &
+            (db.Auteur.titre ** '%{}%'.format(criteres['titre']))
+        )
+        .order_by({
             'nom': db.Auteur.nom,
             'prenom': db.Auteur.prenom,
             'titre': db.Auteur.titre,
@@ -61,19 +70,33 @@ def liste_auteurs(tri='nom'):
     )
 
 
-def liste_editeurs(tri='nom'):
+def liste_editeurs(tri='nom', criteres=None):
+    if not criteres:
+        criteres = {'nom': ''}
     return(
-        db.Editeur.select().order_by({
+        db.Editeur.select()
+        .where((db.Editeur.nom ** '%{}%'.format(criteres['nom'])))
+        .order_by({
             'nom': db.Editeur.nom,
         }[tri])
     )
 
 
-def liste_ouvrages(tri='titre'):
+def liste_ouvrages(tri='titre', criteres=None):
+    if not criteres:
+        criteres = {'titre': '', 'auteur': '', 'editeur': ''}
     return (
         db.Ouvrage.select().join(db.Auteur)
         .switch(db.Ouvrage).join(db.Editeur)
         .switch(db.Exemplaire).join(db.Volume)
+        .where(
+            (db.Ouvrage.titre ** '%{}%'.format(criteres['titre'])) &
+            (
+                (db.Auteur.nom ** '%{}%'.format(criteres['auteur'])) |
+                (db.Auteur.prenom ** '%{}%'.format(criteres['auteur']))
+            ) &
+            (db.Editeur.nom ** '%{}%'.format(criteres['editeur']))
+        )
         .order_by({
             'titre': db.Ouvrage.titre,
             'auteur': db.Auteur.nom,

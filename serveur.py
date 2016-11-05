@@ -45,7 +45,8 @@ def index():
 
 @APP.get('/db/liste/<objet>')
 @APP.get('/db/liste/<objet>/<tri>')
-def liste_ouvrages(**params):
+def liste(**params):
+    params['criteres'] = dict(rq.query)
     return json.dumps(ctl.liste(**params))
 
 
@@ -64,7 +65,7 @@ def editeur(id):
     return json.dumps(ctl.editeur(id))
 
 
-@APP.post('/db/enregistrer/<obj>')
+@APP.put('/db/enregistrer/<obj>')
 def enregistrer(obj):
     ctl.enregistrer(obj, rq.forms.decode())
     return('OK')

@@ -171,7 +171,7 @@ def charger_editeur(rq):
     )
 
 
-def charger_liste(ev, obj, tri, actualiser=True):
+def charger_liste(ev, obj, tri='', actualiser=True, criteres=None):
     global TRI, ASC
     adr, titres = {
         'ouvrages': (
@@ -200,19 +200,25 @@ def charger_liste(ev, obj, tri, actualiser=True):
             ]
         ),
     }[obj]
+
+    def fnct(rq):
+        afficher(
+            formulaire(obj, titres) +
+            tableau_dict(titres, json.loads(rq.text), obj=obj)
+        )
+
     if actualiser or tri != TRI:
         TRI = tri
         requete(
-            '{}/{}'.format(adr, tri),
-            fonction=lambda rq: afficher(
-                tableau_dict(titres, json.loads(rq.text), obj=obj)
-            )
+            '{}/{}?{}'.format(adr, tri, '&'.join(
+                '{}={}'.format(cle, valeur)
+                for cle, valeur in criteres.items()
+            ) if criteres else ''),
+            fonction=fnct
         )
     else:
         ASC = not(ASC)
-        afficher(
-            tableau_dict(titres, json.loads(RQ.text), obj=obj)
-        )
+        fnct(RQ)
 
 
 def enregistrer(ev, obj):
@@ -238,12 +244,34 @@ def enregistrer(ev, obj):
         )
     if requete(
                 '/db/enregistrer/{}'.format(obj),
-                methode='POST',
+                methode='PUT',
                 parametres=parametres
             ) == 'OK':
         alert('Modifications enregistrées.')
     else:
         alert('Il y a eu une erreur.')
+
+
+def formulaire(obj, donnees):
+    bouton = BUTTON('Filtrer')
+    bouton.bind(
+        'click',
+        lambda ev: charger_liste(
+            ev, obj, actualiser=True,
+            criteres={donnee[1]: doc[donnee[1]].value for donnee in donnees}
+        )
+    )
+    return (
+        tableau(
+            [
+                [donnee[0], INPUT(
+                    type='text', name=donnee[1], id=donnee[1]
+                )] for donnee in donnees
+            ],
+            entete=False, trier=False
+        ) +
+        bouton
+    )
 
 
 def tableau_dict(
